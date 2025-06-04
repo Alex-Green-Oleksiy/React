@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="uk">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Банківський рахунок</title>
+        <!-- Підключаємо React -->
+        <script
+            crossorigin
+            src="https://unpkg.com/react@18/umd/react.development.js"
+        ></script>
+        <!-- Підключаємо ReactDOM -->
+        <script
+            crossorigin
+            src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+        ></script>
+        <!-- Babel для підтримки JSX -->
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <style>
+            body {
+                font-family: "Arial", sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #000000e8;
+                color: #2c3e50;
+            }
+            .container {
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+                padding: 25px;
+                margin-top: 20px;
+            }
+            h1,
+            h2,
+            h3 {
+                color: #2c3e50;
+                margin-top: 0;
+            }
+            .balance-section {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 25px;
+                text-align: center;
+            }
+            .balance-amount {
+                font-size: 2.5em;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+            .balance-positive {
+                color: #27ae60;
+            }
+            .balance-negative {
+                color: #e74c3c;
+            }
+            .currency-rates {
+                display: flex;
+                justify-content: space-around;
+                margin: 20px 0;
+                flex-wrap: wrap;
+            }
+            .currency-box {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                min-width: 120px;
+                margin: 5px;
+            }
+            .currency-amount {
+                font-size: 1.5em;
+                font-weight: bold;
+                margin: 5px 0;
+            }
+            .transaction-form {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 20px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+            input[type="number"] {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+            .btn-group {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+            }
+            button {
+                flex: 1;
+                padding: 12px;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .btn-deposit {
+                background-color: #27ae60;
+                color: white;
+            }
+            .btn-deposit:hover {
+                background-color: #219653;
+            }
+            .btn-withdraw {
+                background-color: #e74c3c;
+                color: white;
+            }
+            .btn-withdraw:hover {
+                background-color: #c0392b;
+            }
+            .transaction-history {
+                margin-top: 30px;
+            }
+            .transaction-list {
+                list-style: none;
+                padding: 0;
+            }
+            .transaction-item {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 15px;
+                border-bottom: 1px solid #eee;
+            }
+            .transaction-amount {
+                font-weight: bold;
+            }
+            .deposit {
+                color: #27ae60;
+            }
+            .withdrawal {
+                color: #e74c3c;
+            }
+            .commission {
+                font-size: 0.9em;
+                color: #7f8c8d;
+                margin-top: 5px;
+            }
+            .error-message {
+                color: #e74c3c;
+                margin-top: 5px;
+                font-size: 0.9em;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+
+        <script type="text/babel">
+            function BankAccount() {
+                // Стан для рахунку та курсів валют
+                const [balance, setBalance] = React.useState(0);
+                const [transactionAmount, setTransactionAmount] =
+                    React.useState("");
+                const [transactions, setTransactions] = React.useState([]);
+                const [error, setError] = React.useState("");
+
+                // Фіксовані курси валют
+                const exchangeRates = {
+                    usd: 37.5, // 1 USD = 37.5 UAH
+                    eur: 40.2 // 1 EUR = 40.2 UAH
+                };
+
+                // Комісія 3%
+                const COMMISSION_RATE = 0.03;
+
+                // Конвертація гривні в інші валюти
+                const convertToCurrency = (amountUah, currency) => {
+                    return (amountUah / exchangeRates[currency]).toFixed(2);
+                };
+
+                // Обробник зміни суми операції
+                const handleAmountChange = (e) => {
+                    const value = e.target.value;
+                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                        setTransactionAmount(value);
+                        setError("");
+                    }
+                };
+
+                // Функція для поповнення рахунку
+                const handleDeposit = () => {
+                    const amount = parseFloat(transactionAmount);
+
+                    if (isNaN(amount) || amount <= 0) {
+                        setError(
+                            "Будь ласка, введіть коректну суму для поповнення (більше 0)"
+                        );
+                        return;
+                    }
+
+                    const commission = amount * COMMISSION_RATE;
+                    const amountAfterCommission = amount - commission;
+
+                    const newBalance = balance + amountAfterCommission;
+                    setBalance(newBalance);
+
+                    // Додаємо транзакцію до історії
+                    addTransaction("deposit", amount, commission);
+
+                    // Очищуємо поле вводу
+                    setTransactionAmount("");
+                };
+
+                // Функція для зняття коштів
+                const handleWithdraw = () => {
+                    const amount = parseFloat(transactionAmount);
+
+                    if (isNaN(amount) || amount <= 0) {
+                        setError(
+                            "Будь ласка, введіть коректну суму для зняття (більше 0)"
+                        );
+                        return;
+                    }
+
+                    const commission = amount * COMMISSION_RATE;
+                    const totalAmount = amount + commission;
+
+                    if (totalAmount > balance) {
+                        setError(
+                            "Недостатньо коштів на рахунку для виконання операції"
+                        );
+                        return;
+                    }
+
+                    const newBalance = balance - totalAmount;
+                    setBalance(newBalance);
+
+                    // Додаємо транзакцію до історії
+                    addTransaction("withdrawal", amount, commission);
+
+                    // Очищуємо поле вводу
+                    setTransactionAmount("");
+                };
+
+                // Додавання транзакції до історії
+                const addTransaction = (type, amount, commission) => {
+                    const newTransaction = {
+                        id: Date.now(),
+                        type,
+                        amount,
+                        commission,
+                        timestamp: new Date().toLocaleString(),
+                        newBalance:
+                            type === "deposit"
+                                ? balance + (amount - commission)
+                                : balance - (amount + commission)
+                    };
+
+                    setTransactions((prev) => [newTransaction, ...prev]);
+                    setError("");
+                };
+
+                // Отримання класу для відображення суми валюти
+                const getCurrencyAmountClass = (amount) => {
+                    return amount < 100
+                        ? "balance-negative"
+                        : "balance-positive";
+                };
+
+                // Отримання класу для відображення суми операції
+                const getTransactionAmountClass = (type) => {
+                    return type === "deposit" ? "deposit" : "withdrawal";
+                };
+
+                return (
+                    <div className="container">
+                        <h1>Банківський рахунок</h1>
+
+                        <div className="balance-section">
+                            <h2>Ваш баланс</h2>
+                            <div
+                                className={`balance-amount ${
+                                    balance >= 0
+                                        ? "balance-positive"
+                                        : "balance-negative"
+                                }`}
+                            >
+                                {balance.toFixed(2)} грн
+                            </div>
+
+                            <div className="currency-rates">
+                                <div className="currency-box">
+                                    <div>USD</div>
+                                    <div
+                                        className={`currency-amount ${getCurrencyAmountClass(
+                                            convertToCurrency(balance, "usd")
+                                        )}`}
+                                    >
+                                        {convertToCurrency(balance, "usd")} $
+                                    </div>
+                                </div>
+                                <div className="currency-box">
+                                    <div>EUR</div>
+                                    <div
+                                        className={`currency-amount ${getCurrencyAmountClass(
+                                            convertToCurrency(balance, "eur")
+                                        )}`}
+                                    >
+                                        {convertToCurrency(balance, "eur")} €
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="transaction-form">
+                            <h3>Операція з рахунком</h3>
+                            <div className="form-group">
+                                <label htmlFor="amount">Сума (грн):</label>
+                                <input
+                                    type="text"
+                                    id="amount"
+                                    value={transactionAmount}
+                                    onChange={handleAmountChange}
+                                    placeholder="Введіть суму"
+                                />
+                                {error && (
+                                    <div className="error-message">{error}</div>
+                                )}
+                            </div>
+
+                            <div className="btn-group">
+                                <button
+                                    className="btn-deposit"
+                                    onClick={handleDeposit}
+                                >
+                                    Поповнити
+                                </button>
+                                <button
+                                    className="btn-withdraw"
+                                    onClick={handleWithdraw}
+                                >
+                                    Зняти
+                                </button>
+                            </div>
+
+                            <div className="commission">
+                                * Комісія за операцію: {COMMISSION_RATE * 100}%
+                            </div>
+                        </div>
+
+                        {transactions.length > 0 && (
+                            <div className="transaction-history">
+                                <h3>Історія операцій</h3>
+                                <ul className="transaction-list">
+                                    {transactions.map((transaction) => (
+                                        <li
+                                            key={transaction.id}
+                                            className="transaction-item"
+                                        >
+                                            <div>
+                                                {transaction.type === "deposit"
+                                                    ? "Поповнення"
+                                                    : "Зняття"}{" "}
+                                                • {transaction.timestamp}
+                                                <div className="commission">
+                                                    Комісія:{" "}
+                                                    {transaction.commission.toFixed(
+                                                        2
+                                                    )}{" "}
+                                                    грн
+                                                </div>
+                                            </div>
+                                            <div
+                                                className={`transaction-amount ${getTransactionAmountClass(
+                                                    transaction.type
+                                                )}`}
+                                            >
+                                                {transaction.type === "deposit"
+                                                    ? "+"
+                                                    : "-"}
+                                                {transaction.amount.toFixed(2)}{" "}
+                                                грн
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Рендеримо компонент у DOM
+            const root = ReactDOM.createRoot(document.getElementById("root"));
+            root.render(<BankAccount />);
+        </script>
+    </body>
+</html>
