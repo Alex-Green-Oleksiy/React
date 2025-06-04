@@ -4,17 +4,14 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Генератор випадкових чисел</title>
-        <!-- Підключаємо React -->
         <script
             crossorigin
             src="https://unpkg.com/react@18/umd/react.development.js"
         ></script>
-        <!-- Підключаємо ReactDOM -->
         <script
             crossorigin
             src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
         ></script>
-        <!-- Babel для підтримки JSX -->
         <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
         <style>
             body {
@@ -91,12 +88,10 @@
 
         <script type="text/babel">
             function RandomNumberGenerator() {
-                // Стан для зберігання діапазону та результату
                 const [min, setMin] = React.useState(1);
                 const [max, setMax] = React.useState(100);
                 const [result, setResult] = React.useState(null);
 
-                // Обробники зміни мінімального та максимального значень
                 const handleMinChange = (e) => {
                     const value = parseInt(e.target.value) || 0;
                     setMin(value);
@@ -107,22 +102,17 @@
                     setMax(value);
                 };
 
-                // Функція для генерації випадкового числа
                 const generateRandomNumber = () => {
-                    // Перевірка на коректність діапазону
                     const minValue = Math.min(min, max);
                     const maxValue = Math.max(min, max);
 
-                    // Генерація випадкового числа
                     const randomNum =
                         Math.floor(Math.random() * (maxValue - minValue + 1)) +
                         minValue;
 
-                    // Оновлення стану
                     setResult(randomNum);
                 };
 
-                // Функція для форматування діапазону
                 const formatRange = () => {
                     const minValue = Math.min(min, max);
                     const maxValue = Math.max(min, max);
@@ -170,7 +160,6 @@
                 );
             }
 
-            // Рендеримо компонент у DOM
             const root = ReactDOM.createRoot(document.getElementById("root"));
             root.render(<RandomNumberGenerator />);
         </script>
