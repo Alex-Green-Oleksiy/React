@@ -27,6 +27,16 @@
             h2 {
                 color: #333;
             }
+            .season-image {
+                width: 100%;
+                max-width: 400px;
+                height: 250px; 
+                object-fit: cover; 
+                border-radius: 8px;
+                margin: 15px auto; 
+                display: block; 
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            }
             input {
                 width: 100%;
                 padding: 8px;
@@ -59,23 +69,27 @@
                     winter: {
                         name: "Зима",
                         months: [12, 1, 2],
-                        clothing: ["Шапка", "Пальто", "Рукавиці"]
+                        clothing: ["Шапка", "Стрінги", "Рукавиці"],
+                        image: "/img/winter.webp" ,
                     },
                     spring: {
                         name: "Весна",
                         months: [3, 4, 5],
-                        clothing: ["Легка куртка", "Джинси", "Кросівки"]
+                        clothing: ["Легка куртка", "Джинси", "Кросівки"],
+                        image: "/img/spring.webp" ,
                     },
                     summer: {
                         name: "Літо",
                         months: [6, 7, 8],
-                        clothing: ["Футболка", "Шорти", "Сандалі"]
+                        clothing: ["Шапка", "Пальто", "Лопата"],
+                        image: "/img/summer.webp" ,
                     },
                     autumn: {
                         name: "Осінь",
                         months: [9, 10, 11],
-                        clothing: ["Светр", "Штани", "Черевики"]
-                    }
+                        clothing: ["Шапка", "Пальто", "Рукавиці"],
+                        image: "/img/fall.webp" ,
+                    },
                 };
 
                 const handleMonthChange = (e) => {
@@ -102,6 +116,14 @@
                         {currentSeason && (
                             <div>
                                 <h2>{currentSeason.name}</h2>
+
+                                <img
+                                    src={currentSeason.image}
+                                    alt={currentSeason.name}
+                                    className="season-image"
+                                />
+
+                                <h3>Рекомендований одяг:</h3>
                                 <ul>
                                     {currentSeason.clothing.map((item, i) => (
                                         <li key={i}>{item}</li>
